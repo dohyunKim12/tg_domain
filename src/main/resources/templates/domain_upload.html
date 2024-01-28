@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>File Upload</title>
+  <script src="/upload.js"></script>
+</head>
+<body>
+<h1>파일 업로드</h1>
+<form method="POST" action="domain-upload" enctype="multipart/form-data">
+  <label for="file-upload">파일 선택:</label>
+  <input type="file" id="file-upload" name="file">
+  <button type="submit">업로드</button>
+</form>
+
+<!-- 모달 HTML 구조, 처음에는 숨겨져 있음 -->
+<div id="successModal" style="display:none;">
+  <div id="uploadSuccessModal" style="display: none;">
+    <h2>업로드 성공!</h2>
+    <p>파일 업로드가 성공적으로 완료되었습니다.</p>
+    <button onclick="closeModal()">닫기</button>
+  </div>
+
+  <script>
+    function closeModal() {
+      document.getElementById('uploadSuccessModal').style.display = 'none';
+    }
+  </script>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+.idea
+.vscode
+
+# Ignore Gradle build output directory
+bin
+
+# Ignore Log files
+WEB-INF
+
+# Ignore tmp files from jenkins pipeline
+tmp
+jenkins
+
+# Ignore osx file
+.DS_Store
+
+# Ignore test folder
+/test/main/java
+
+/build
+*.jar
+
+# Ignore build files
+out/
+
