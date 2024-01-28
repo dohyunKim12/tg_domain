@@ -3,6 +3,10 @@ package com.tg.url.controller;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Collections;
@@ -25,6 +30,7 @@ public class DomainUploadController {
     public static final Logger logger = LogManager.getLogger(DomainUploadController.class);
 
     private final DbConnectionManager dbConnectionManager;
+    private String savedFilePath = null;
 
     @Autowired
     public DomainUploadController(DbConnectionManager dbConnectionManager) {
@@ -43,7 +49,7 @@ public class DomainUploadController {
         logger.info("handleFileUpload called");
         saveFile(file);
 
-        additionalMethod();
+//        additionalMethod(); //insert data in db
 
         return ResponseEntity.ok(Collections.singletonMap("message", "uploadSuccess"));
     }
@@ -58,6 +64,7 @@ public class DomainUploadController {
             }
             String fileName = file.getOriginalFilename();
             String filePath = uploadDir + File.separator + fileName;
+            savedFilePath = filePath;
             file.transferTo(new File(filePath));
             logger.info("File saved done");
         } catch (IOException e) {
@@ -67,31 +74,29 @@ public class DomainUploadController {
 
 
     private void additionalMethod() {
-//        String excelFilePath = "path/to/your/excel.xlsx"; // 엑셀 파일 경로
-//
-//        try {
-//            Connection conn = dbConnectionManager.getDataSource().getConnection();
-//            FileInputStream excelFile = new FileInputStream(new File(excelFilePath));
-//            Workbook workbook = new XSSFWorkbook(excelFile);
-//            Sheet sheet = workbook.getSheetAt(0);
-//
-//            for (Row row : sheet) {
-//                String value1 = row.getCell(0).getStringCellValue(); // 첫 번째 열의 값
-//                String value2 = row.getCell(1).getStringCellValue(); // 두 번째 열의 값
-//
-//                // MySQL에 데이터를 저장하는 PreparedStatement 작성
-//                String sql = "INSERT INTO your_table (column1, column2) VALUES (?, ?)";
-//                PreparedStatement preparedStatement = conn.prepareStatement(sql);
-//                preparedStatement.setString(1, value1);
-//                preparedStatement.setString(2, value2);
-//                preparedStatement.executeUpdate();
-//                preparedStatement.close();
-//            }
-//
-//            workbook.close();
-//            excelFile.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        try {
+            Connection conn = dbConnectionManager.getDataSource().getConnection();
+            FileInputStream excelFile = new FileInputStream(new File(savedFilePath));
+            Workbook workbook = new XSSFWorkbook(excelFile);
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (Row row : sheet) {
+                String value1 = row.getCell(0).getStringCellValue(); // 첫 번째 열의 값
+                String value2 = row.getCell(1).getStringCellValue(); // 두 번째 열의 값
+
+                // MySQL에 데이터를 저장하는 PreparedStatement 작성
+                String sql = "INSERT INTO your_table (column1, column2) VALUES (?, ?)";
+                PreparedStatement preparedStatement = conn.prepareStatement(sql);
+                preparedStatement.setString(1, value1);
+                preparedStatement.setString(2, value2);
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+            }
+
+            workbook.close();
+            excelFile.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

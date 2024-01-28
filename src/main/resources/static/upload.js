@@ -1,22 +1,26 @@
-$(document).ready(function() {
-    $('#uploadForm').submit(function(event) {
-        event.preventDefault(); // 폼 기본 제출 막기
-        var formData = new FormData(this);
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('file-upload-form');
+    form.onsubmit = function(event) {
+        event.preventDefault(); // 기본 폼 제출 방지
 
-        $.ajax({
-            url: '/domain-upload',
-            type: 'POST',
-            data: formData,
-            processData: false, // 필수
-            contentType: false, // 필수
-            success: function(response) {
-                // 모달 표시
-                $('#successModal').show();
-                // 추가적으로, 응답에 따른 메시지나 처리를 여기에 작성
-            },
-            error: function() {
-                // 오류 처리
-            }
-        });
-    });
+        var formData = new FormData(form);
+        fetch('/domain-upload', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'uploadSuccess') {
+                    console.log("Uplaod Success, display modal");
+                    document.getElementById('uploadSuccessModal').style.display = 'block';
+                } else {
+                    console.error("Error occurred while upload file");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    };
 });
+
+function closeModal() {
+    document.getElementById('uploadSuccessModal').style.display = 'none';
+}
