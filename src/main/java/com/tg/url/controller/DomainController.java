@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Collections;
+import java.util.*;
 
 @Controller
 public class DomainUploadController {
@@ -50,7 +50,7 @@ public class DomainUploadController {
         logger.info("handleFileUpload called");
         saveFile(file);
 
-//        additionalMethod(); //insert data in db
+        upsertDomainInfo(); //insert data in db
 
         return ResponseEntity.ok(Collections.singletonMap("message", "uploadSuccess"));
     }
@@ -68,24 +68,31 @@ public class DomainUploadController {
     }
 
 
-    private void additionalMethod() {
+    private void upsertDomainInfo() {
         try {
             Connection conn = dbConnectionManager.getDataSource().getConnection();
-            FileInputStream excelFile = new FileInputStream(new File(savedFilePath));
+            FileInputStream excelFile = new FileInputStream(savedFilePath);
             Workbook workbook = new XSSFWorkbook(excelFile);
             Sheet sheet = workbook.getSheetAt(0);
 
+            List<String> domainSet = new ArrayList<>();
             for (Row row : sheet) {
-                String value1 = row.getCell(0).getStringCellValue(); // 첫 번째 열의 값
-                String value2 = row.getCell(1).getStringCellValue(); // 두 번째 열의 값
-
-                // MySQL에 데이터를 저장하는 PreparedStatement 작성
-                String sql = "INSERT INTO your_table (column1, column2) VALUES (?, ?)";
-                PreparedStatement preparedStatement = conn.prepareStatement(sql);
-                preparedStatement.setString(1, value1);
-                preparedStatement.setString(2, value2);
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
+                String rawDomain = row.getCell(1).getStringCellValue(); // second column value
+                logger.info("raw domain string: {}", rawDomain);
+                String formedDomain = rawDomain.replaceAll("http://", "")
+                        .replaceAll("https://", "")
+                        .replaceAll("www.", "");
+                logger.info("formed domain string: {}", formedDomain);
+                if(!domainSet.contains(formedDomain)) {
+                    domainSet.add(formedDomain);
+                }
+            }
+            for(String domainStr : domainSet) {
+                String sql = "INSERT INTO domain (domain) VALUES (?) ON DUPLICATE KEY UPDATE domain = domain;";
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, domainStr);
+                pstmt.execute();
+                logger.info("domain string {} inserted", domainStr);
             }
 
             workbook.close();
