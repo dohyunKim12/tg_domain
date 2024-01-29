@@ -24,3 +24,17 @@ document.addEventListener('DOMContentLoaded', function() {
 function closeModal() {
     document.getElementById('uploadSuccessModal').style.display = 'none';
 }
+
+function truncateDomain() {
+    fetch('/domain_truncate', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(error => console.error('Error:', error));
+}

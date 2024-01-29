@@ -71,7 +71,6 @@ public class DomainController {
         }
     }
 
-
     private boolean upsertDomainInfo() throws Exception {
         Connection conn = dbConnectionManager.getDataSource().getConnection();
         FileInputStream excelFile = new FileInputStream(savedFilePath);
@@ -117,5 +116,26 @@ public class DomainController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("message", "DB 삭제 실패"));
         }
+    }
+
+    @GetMapping("/domain_register") // 고객사 정보 입력, customer db에 없을 시 insert 하고, domain 1개 제안, 반환
+    public String domainRegister() {
+        return "domain_register";
+    }
+    @PostMapping("/domain-register")
+    @ResponseBody
+    public ResponseEntity handleDomainRetrieve(@RequestParam("customer-name") String customerName) {
+        // 파일 저장
+        logger.info("CustomerRetrieve svc called");
+
+        try {
+//            retrieveCustomerInfo();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+            return ResponseEntity.ok(Collections.singletonMap("message", "fail"));
+        }
+
+        return ResponseEntity.ok(Collections.singletonMap("message", "success"));
     }
 }

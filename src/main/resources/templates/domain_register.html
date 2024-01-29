@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tg Domain Register</title>
+  <script src="/customer_get.js"></script>
+<!--  <link rel="stylesheet" type="text/css" href="/modal.css">-->
+</head>
+<body>
+<h1>Domain 등록</h1>
+<form id="customer-retrieve-form" method="POST" action="domain-register">
+  <label for="customer-name">고객사:</label>
+  <input type="text" id="customer-name" name="customer-name">
+  <button type="submit">조회</button>
+</form>
+
+<div id="customerRetrieveSuccessModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeModal()">&times;</span>
+<!--    <h2>업로드 성공!</h2>-->
+<!--    <p>파일 업로드가 성공적으로 완료되었습니다.</p>-->
+  </div>
+</div>
+
+<script src="/customer_get.js"></script>
+
+</body>
+</html>
