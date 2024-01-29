@@ -9,32 +9,30 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
 @Controller
-public class DomainUploadController {
+public class DomainController {
 
-    public static final Logger logger = LogManager.getLogger(DomainUploadController.class);
+    public static final Logger logger = LogManager.getLogger(DomainController.class);
 
     private final DbConnectionManager dbConnectionManager;
     private String savedFilePath = null;
 
     @Autowired
-    public DomainUploadController(DbConnectionManager dbConnectionManager) {
+    public DomainController(DbConnectionManager dbConnectionManager) {
         this.dbConnectionManager = dbConnectionManager;
     }
 
@@ -50,7 +48,13 @@ public class DomainUploadController {
         logger.info("handleFileUpload called");
         saveFile(file);
 
-        upsertDomainInfo(); //insert data in db
+        try {
+            upsertDomainInfo(); //insert data in db
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+            return ResponseEntity.ok(Collections.singletonMap("message", "uploadFail"));
+        }
 
         return ResponseEntity.ok(Collections.singletonMap("message", "uploadSuccess"));
     }
@@ -68,37 +72,50 @@ public class DomainUploadController {
     }
 
 
-    private void upsertDomainInfo() {
-        try {
-            Connection conn = dbConnectionManager.getDataSource().getConnection();
-            FileInputStream excelFile = new FileInputStream(savedFilePath);
-            Workbook workbook = new XSSFWorkbook(excelFile);
-            Sheet sheet = workbook.getSheetAt(0);
+    private boolean upsertDomainInfo() throws Exception {
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        FileInputStream excelFile = new FileInputStream(savedFilePath);
+        Workbook workbook = new XSSFWorkbook(excelFile);
+        Sheet sheet = workbook.getSheetAt(0);
 
-            List<String> domainSet = new ArrayList<>();
-            for (Row row : sheet) {
-                String rawDomain = row.getCell(1).getStringCellValue(); // second column value
-                logger.info("raw domain string: {}", rawDomain);
-                String formedDomain = rawDomain.replaceAll("http://", "")
-                        .replaceAll("https://", "")
-                        .replaceAll("www.", "");
-                logger.info("formed domain string: {}", formedDomain);
-                if(!domainSet.contains(formedDomain)) {
-                    domainSet.add(formedDomain);
-                }
+        List<String> domainSet = new ArrayList<>();
+        for (Row row : sheet) {
+            String rawDomain = row.getCell(1).getStringCellValue(); // second column value
+            logger.info("raw domain string: {}", rawDomain);
+            String formedDomain = rawDomain.replaceAll("http://", "")
+                    .replaceAll("https://", "")
+                    .replaceAll("www.", "");
+            logger.info("formed domain string: {}", formedDomain);
+            if(!domainSet.contains(formedDomain)) {
+                domainSet.add(formedDomain);
             }
-            for(String domainStr : domainSet) {
-                String sql = "INSERT INTO domain (domain) VALUES (?) ON DUPLICATE KEY UPDATE domain = domain;";
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                pstmt.setString(1, domainStr);
-                pstmt.execute();
-                logger.info("domain string {} inserted", domainStr);
-            }
+        }
+        for(String domainStr : domainSet) {
+            String sql = "INSERT INTO domain (domain) SELECT ? WHERE NOT EXISTS (SELECT domain FROM domain WHERE domain = ?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, domainStr);
+            pstmt.setString(2, domainStr);
+            pstmt.execute();
+            logger.info("domain string {} inserted", domainStr);
+        }
 
-            workbook.close();
-            excelFile.close();
-        } catch (Exception e) {
+        workbook.close();
+        excelFile.close();
+        return true;
+    }
+
+    @DeleteMapping("/domain_truncate")
+    @ResponseBody
+    public ResponseEntity<?> domainTruncate() {
+        try (Connection conn = dbConnectionManager.getDataSource().getConnection()) {
+            PreparedStatement pstmt = conn.prepareStatement("TRUNCATE TABLE domain");
+            pstmt.execute();
+            return ResponseEntity.ok(Collections.singletonMap("message", "Domain DB 삭제 완료"));
+        } catch (SQLException e) {
             e.printStackTrace();
+            logger.error(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("message", "DB 삭제 실패"));
         }
     }
 }

@@ -1,8 +1,6 @@
 package com.tg.url.config;
 
-import com.tg.url.controller.DomainUploadController;
 import org.apache.logging.log4j.LogManager;
-import org.slf4j.Logger;
 
 public class Global {
     private static class Holder {

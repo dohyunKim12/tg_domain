@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>File Upload</title>
+  <title>Tg Domain Upload</title>
   <script src="/upload.js"></script>
   <link rel="stylesheet" type="text/css" href="/modal.css">
 </head>
@@ -13,13 +13,9 @@
   <input type="file" id="file-upload" name="file">
   <button type="submit">업로드</button>
 </form>
-<!--&lt;!&ndash; 모달 HTML 구조, 처음에는 숨겨져 있음 &ndash;&gt;-->
-<!--<div id="uploadSuccessModal" style="display:none;">-->
-<!--  <h2>업로드 성공!</h2>-->
-<!--  <p>파일 업로드가 성공적으로 완료되었습니다.</p>-->
-<!--  <button onclick="closeModal()">닫기</button>-->
-<!--</div>-->
-<!-- 모달 HTML 구조 -->
+
+<button onclick="truncateDomain()" style="margin-top: 50px; margin-left: 30px;">DB에서 Domain Data 모두 삭제</button>
+
 <div id="uploadSuccessModal" class="modal">
   <div class="modal-content">
     <span class="close-button" onclick="closeModal()">&times;</span>
@@ -33,6 +29,19 @@
 <script>
   function closeModal() {
     document.getElementById('uploadSuccessModal').style.display = 'none';
+  }
+  function truncateDomain() {
+    fetch('/domain_truncate', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+            .then(response => response.json())
+            .then(data => {
+              alert(data.message);
+            })
+            .catch(error => console.error('Error:', error));
   }
 </script>
 
