@@ -20,6 +20,7 @@ jenkins
 /test/main/java
 
 /build
+/binary
 *.jar
 
 # Ignore build files

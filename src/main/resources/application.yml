@@ -21,9 +21,16 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
 
+  thymeleaf:
+    encoding: UTF-8
 
 server:
-  port: 8081
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 
 

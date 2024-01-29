@@ -1,5 +1,6 @@
 package com.tg.url.controller;
 
+import com.tg.url.config.TgConstants;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,17 +57,11 @@ public class DomainUploadController {
 
     private void saveFile(MultipartFile file) {
         try {
-            String uploadDir = "/tmp/uploads";
-
-            File directory = new File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
             String fileName = file.getOriginalFilename();
-            String filePath = uploadDir + File.separator + fileName;
-            savedFilePath = filePath;
+            String filePath = TgConstants.DOMAIN_UPLOAD_PATH + "/" + fileName;
             file.transferTo(new File(filePath));
             logger.info("File saved done");
+            savedFilePath = filePath;
         } catch (IOException e) {
             e.printStackTrace();
         }
