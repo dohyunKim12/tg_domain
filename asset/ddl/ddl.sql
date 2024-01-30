@@ -21,8 +21,8 @@ CREATE TABLE registered_domain
     domain_id        INT NOT NULL,
     page_url         VARCHAR(1000) NULL,
     domain           VARCHAR(500)  NULL,
-    url              VARCHAR(1000) NULL,
-    uploaded_at      TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (customer_id, domain_id, uploaded_at)
+    domain_url       VARCHAR(1000) NULL,
+    published_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (customer_id, domain_id, published_at)
 );
 

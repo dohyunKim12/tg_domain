@@ -1,5 +1,9 @@
 package com.tg.url.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.tg.url.config.TgConstants;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
@@ -20,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -122,20 +127,87 @@ public class DomainController {
     public String domainRegister() {
         return "domain_register";
     }
+
     @PostMapping("/domain-register")
     @ResponseBody
-    public ResponseEntity handleDomainRetrieve(@RequestParam("customer-name") String customerName) {
+    public ResponseEntity<String> handleDomainRetrieve(@RequestParam("customer-name") String customerName) {
         // 파일 저장
         logger.info("CustomerRetrieve svc called");
 
         try {
-//            retrieveCustomerInfo();
+            String customerId = retrieveCustomerInfo(customerName);
+            if(customerId == null) {
+                return ResponseEntity.ok("notFound");
+            } else {
+                // return customer's registered domain info
+                JsonObject jo = retrieveRegisteredDomainInfo(customerName);
+                Gson gson = new Gson();
+                return ResponseEntity.ok(gson.toJson(jo));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e.toString());
-            return ResponseEntity.ok(Collections.singletonMap("message", "fail"));
+            return ResponseEntity.ok("fail");
         }
+    }
 
-        return ResponseEntity.ok(Collections.singletonMap("message", "success"));
+    private JsonObject retrieveRegisteredDomainInfo(String customerName) throws Exception {
+        JsonObject resposne = new JsonObject();
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select * from customer where customer_name = ?;");
+        pstmt.setString(1, customerName);
+        ResultSet rs = pstmt.executeQuery();
+        resposne.addProperty("customer_name", customerName);
+        JsonArray requestList = new JsonArray();
+        while(rs.next()) {
+            JsonObject requestId = new JsonObject();
+            String customerId = rs.getString("customer_id");
+            requestId.addProperty("customerId", customerId);
+            requestId.addProperty("pageUrl",rs.getString("page_url"));
+            PreparedStatement pstmtDomainList = conn.prepareStatement("select domain_id, domain, count(*) as domainUsedCnt from registered_domain where customer_id = ? " +
+                    "group by domain_id, domain;");
+            pstmtDomainList.setString(1, customerId);
+            ResultSet rsDomainList = pstmtDomainList.executeQuery();
+
+            JsonArray domainList = new JsonArray();
+            while(rsDomainList.next()) {
+                JsonObject domainElem = new JsonObject();
+                String domainId = rsDomainList.getString("domain_id");
+                domainElem.addProperty("domainId", domainId);
+                domainElem.addProperty("domain", rsDomainList.getString("domain"));
+                domainElem.addProperty("domainUsedCnt", rsDomainList.getInt("domainUsedCnt"));
+
+                PreparedStatement pstmtUrls = conn.prepareStatement("select domain_url, published_at from registered_domain where domain_id = ?;");
+                pstmtUrls.setString(1, domainId);
+                ResultSet rsUrls = pstmtUrls.executeQuery();
+
+                JsonArray domainUrlList = new JsonArray();
+                while(rsUrls.next()) {
+                    JsonObject domainUrl = new JsonObject();
+                    domainUrl.addProperty("domainUrl", rsUrls.getString("domain_url"));
+                    domainUrl.addProperty("publishedAt", rsUrls.getString("published_at"));
+                    domainUrlList.add(domainUrl);
+                }
+                domainElem.add("domainUrlList", domainUrlList);
+                domainList.add(domainElem);
+            }
+            requestId.add("domainList", domainList);
+            requestList.add(requestId);
+        }
+        resposne.add("requestList", requestList);
+
+        return resposne;
+    }
+
+    private String retrieveCustomerInfo(String customerName) throws Exception {
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select * from customer where customer_name = ?;");
+        pstmt.setString(1, customerName);
+        ResultSet rs = pstmt.executeQuery();
+        if(rs.next()) {
+            return rs.getString("customer_id");
+        } else {
+            return null;
+        }
     }
 }
