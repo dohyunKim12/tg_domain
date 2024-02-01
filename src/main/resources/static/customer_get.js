@@ -16,12 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.requestList.forEach(request => {
                     console.log(request.customerId);
                     console.log(request.pageUrl);
-                    // domainList가 배열이므로, 필요하다면 여기서 또 순회할 수 있습니다.
                 });
                 data.requestList.forEach(request => {
                     request.domainList.forEach(domain => {
                         console.log(domain);
-                        // domain 객체의 필드에 따라 추가 처리
                     });
                 });
 
@@ -41,15 +39,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     listItem.appendChild(domainList);
                     document.getElementById('requestList').appendChild(listItem);
                 });
+
+                data.recommendedDomainList.forEach(domain => {
+                    console.log(domain)
+                    var listItem = document.createElement('li');
+                    listItem.textContent = `Recommended Domain : ${domain.domain}`;
+                    document.getElementById('recommendedDomainList').appendChild(listItem);
+                });
                 // 고객 이름 설정
                 document.getElementById('customerName').textContent = `Customer Name: ${data.customer_name}`;
 
-                // if (data.message === 'success') {
-                //     console.log("Retrieve Success, display modal");
-                //     document.getElementById('customerRetrieveSuccessModal').style.display = 'block';
-                // } else {
-                //     console.error("Error occurred while customer retrieve file");
-                // }
             })
             .catch(error => console.error('Error:', error));
     };

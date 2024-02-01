@@ -141,6 +141,10 @@ public class DomainController {
             } else {
                 // return customer's registered domain info
                 JsonObject jo = retrieveRegisteredDomainInfo(customerName);
+
+                // recommend domain
+                JsonArray domainList = getDomain(customerName);
+                jo.add("recommendedDomainList", domainList);
                 Gson gson = new Gson();
                 return ResponseEntity.ok(gson.toJson(jo));
             }
@@ -149,6 +153,55 @@ public class DomainController {
             logger.error(e.toString());
             return ResponseEntity.ok("fail");
         }
+    }
+
+    private JsonArray getDomain(String customerName) throws SQLException {
+        JsonArray domainList = new JsonArray();
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select customer_id from customer where customer_name = ?");
+        pstmt.setString(1, customerName);
+        ResultSet rs = pstmt.executeQuery();
+        rs.next();
+
+        String customerId = rs.getString("customer_id");
+
+        pstmt = conn.prepareStatement("select * from registered_domain where customer_id = ?");
+        pstmt.setString(1, customerId);
+        rs = pstmt.executeQuery();
+        boolean virgin = false;
+        if(!rs.next()) {
+            virgin = true;
+        }
+        if (virgin) {
+            pstmt = conn.prepareStatement("SELECT d.domain_id, d.domain " +
+                    "FROM domain d " +
+                    "WHERE d.domain_id NOT IN (SELECT rd.domain_id " +
+                    "FROM registered_domain rd WHERE rd.customer_id = ?) " +
+                    "LIMIT 10");
+            pstmt.setString(1, customerId);
+            rs = pstmt.executeQuery();
+            while(rs.next()){
+                JsonObject jo = new JsonObject();
+                jo.addProperty("domain", rs.getString("domain"));
+                domainList.add(jo);
+            }
+        } else {
+            pstmt = conn.prepareStatement("SELECT d.domain_id, d.domain, COUNT(rd.domain_id) AS usage_count " +
+                            "FROM registered_domain rd " +
+                            "JOIN domain d ON rd.domain_id = d.domain_id " +
+                            "WHERE rd.customer_id = ? " +
+                            "GROUP BY d.domain_id, d.domain " +
+                            "ORDER BY usage_count ASC " +
+                            "LIMIT 10;");
+            pstmt.setString(1, customerId);
+            rs = pstmt.executeQuery();
+            while(rs.next()) {
+                JsonObject jo = new JsonObject();
+                jo.addProperty("domain", rs.getString("domain"));
+                domainList.add(jo);
+            }
+        }
+        return domainList;
     }
 
     private JsonObject retrieveRegisteredDomainInfo(String customerName) throws Exception {
