@@ -1,28 +1,39 @@
-CREATE TABLE customer
+CREATE TABLE client
 (
-    customer_id        INT AUTO_INCREMENT PRIMARY KEY,
-    customer_name           VARCHAR(64) NULL,
-    page_url                VARCHAR(1000) NULL
+    client_id             INT AUTO_INCREMENT PRIMARY KEY,
+    client_name           VARCHAR(255) NOT NULL UNIQUE
+);
+
+
+CREATE TABLE client_url
+(
+    client_url_id         INT AUTO_INCREMENT PRIMARY KEY,
+    client_url            VARCHAR(1000) NULL UNIQUE,
+    client_name           VARCHAR(255) NOT NULL,
+    registered            CHAR(1) NULL
+);
+
+CREATE TABLE category
+(
+    category_id           INT AUTO_INCREMENT PRIMARY KEY,
+    category_name         VARCHAR(255) NOT NULL UNIQUE,
+    domain                VARCHAR(1000) NULL
 );
 
 CREATE TABLE domain
 (
     domain_id        INT AUTO_INCREMENT PRIMARY KEY,
-    domain           VARCHAR(500) NOT NULL,
+    domain           VARCHAR(1000) NOT NULL UNIQUE,
     uploaded_at      TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE domain ADD UNIQUE (domain);
 
-
-CREATE TABLE registered_domain
+CREATE TABLE page_url
 (
-    customer_id      INT NOT NULL,
-    domain_id        INT NOT NULL,
-    page_url         VARCHAR(1000) NULL,
-    domain           VARCHAR(500)  NULL,
-    domain_url       VARCHAR(1000) NULL,
-    published_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (customer_id, domain_id, published_at)
+    page_url_id        INT AUTO_INCREMENT PRIMARY KEY,
+    client_url         VARCHAR(1000) NULL,
+    domain             VARCHAR(1000) NULL,
+    page_url           VARCHAR(1000) NULL UNIQUE ,
+    published_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
