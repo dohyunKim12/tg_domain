@@ -16,15 +16,16 @@ CREATE TABLE client_url
 CREATE TABLE category
 (
     category_id           INT AUTO_INCREMENT PRIMARY KEY,
-    category_name         VARCHAR(255) NOT NULL UNIQUE,
-    domain                VARCHAR(1000) NULL
+    category_name         VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE domain
 (
     domain_id        INT AUTO_INCREMENT PRIMARY KEY,
-    domain           VARCHAR(1000) NOT NULL UNIQUE,
-    uploaded_at      TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+    category_name    VARCHAR(255) NULL,
+    domain           VARCHAR(1000) NOT NULL,
+    uploaded_at      TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (category_name, domain)
 );
 
 
