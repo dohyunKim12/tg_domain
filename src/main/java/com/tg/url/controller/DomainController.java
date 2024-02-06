@@ -82,27 +82,54 @@ public class DomainController {
         Workbook workbook = new XSSFWorkbook(excelFile);
         Sheet sheet = workbook.getSheetAt(0);
 
-        List<String> domainSet = new ArrayList<>();
-        for (Row row : sheet) {
-            String rawDomain = row.getCell(1).getStringCellValue(); // second column value
-            logger.info("raw domain string: {}", rawDomain);
-            String formedDomain = rawDomain.replaceAll("http://", "")
-                    .replaceAll("https://", "")
-                    .replaceAll("www.", "");
-            logger.info("formed domain string: {}", formedDomain);
-            if(!domainSet.contains(formedDomain)) {
-                domainSet.add(formedDomain);
+        Map<String, List<String>> domainMap = new HashMap<>();
+        int categoriesCnt = sheet.getRow(0).getLastCellNum();
+        for(int colIdx = 1; colIdx < categoriesCnt; colIdx++) {
+            String category = null;
+            List<String> domainSet = new ArrayList<>();
+            for(int rowIdx = 0; rowIdx < sheet.getLastRowNum() + 1; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if(rowIdx == 0) {
+                    category = row.getCell(colIdx).getStringCellValue();
+                } else {
+                    String rawDomain = row.getCell(colIdx).getStringCellValue();
+                    if(rawDomain != null) {
+                        logger.info("raw domain string: {}", rawDomain);
+                        String formedDomain = rawDomain.replaceAll("http://", "")
+                                .replaceAll("https://", "")
+                                .replaceAll("www.", "");
+                        logger.info("formed domain string: {}", formedDomain);
+                        if(!domainSet.contains(formedDomain)) {
+                            domainSet.add(formedDomain);
+                        }
+                    } else {
+                        domainMap.put(category, domainSet);
+                        break;
+                    }
+                }
             }
         }
-        for(String domainStr : domainSet) {
-            String sql = "INSERT INTO domain (domain) SELECT ? WHERE NOT EXISTS (SELECT domain FROM domain WHERE domain = ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, domainStr);
-            pstmt.setString(2, domainStr);
+
+        for(String category : domainMap.keySet()) {
+            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO category (category_name) SELECT ? WHERE NOT EXISTS (SELECT category_name FROM category WHERE category_name = ?)");
+            pstmt.setString(1, category);
+            pstmt.setString(2, category);
             pstmt.execute();
-            logger.info("domain string {} inserted", domainStr);
         }
 
+        for(Map.Entry<String, List<String>> entry : domainMap.entrySet()) {
+            String categoryName = entry.getKey();
+            List<String> domainList = entry.getValue();
+            for(String domain : domainList) {
+                String sql = "INSERT INTO domain (category_name, domain) VALUES (?, ?) " +
+                        "ON DUPLICATE KEY UPDATE domain_id = domain_id";
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, categoryName);
+                pstmt.setString(2, domain);
+                pstmt.execute();
+                logger.info("domain string {} inserted", domain);
+            }
+        }
         workbook.close();
         excelFile.close();
         return true;
@@ -187,12 +214,12 @@ public class DomainController {
             }
         } else {
             pstmt = conn.prepareStatement("SELECT d.domain_id, d.domain, COUNT(rd.domain_id) AS usage_count " +
-                            "FROM registered_domain rd " +
-                            "JOIN domain d ON rd.domain_id = d.domain_id " +
-                            "WHERE rd.customer_id = ? " +
-                            "GROUP BY d.domain_id, d.domain " +
-                            "ORDER BY usage_count ASC " +
-                            "LIMIT 10;");
+                    "FROM registered_domain rd " +
+                    "JOIN domain d ON rd.domain_id = d.domain_id " +
+                    "WHERE rd.customer_id = ? " +
+                    "GROUP BY d.domain_id, d.domain " +
+                    "ORDER BY usage_count ASC " +
+                    "LIMIT 10;");
             pstmt.setString(1, customerId);
             rs = pstmt.executeQuery();
             while(rs.next()) {
