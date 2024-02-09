@@ -8,6 +8,7 @@ import com.tg.url.config.TgConstants;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -87,20 +88,27 @@ public class DomainController {
         for(int colIdx = 1; colIdx < categoriesCnt; colIdx++) {
             String category = null;
             List<String> domainSet = new ArrayList<>();
-            for(int rowIdx = 0; rowIdx < sheet.getLastRowNum() + 1; rowIdx++) {
+            for(int rowIdx = 0; rowIdx < sheet.getLastRowNum() + 2; rowIdx++) {
                 Row row = sheet.getRow(rowIdx);
+                if(row == null) {
+                    domainMap.put(category, domainSet);
+                    break;
+                }
                 if(rowIdx == 0) {
+                    System.out.println("row: " + rowIdx);
+                    System.out.println("col: " + colIdx);
                     category = row.getCell(colIdx).getStringCellValue();
                 } else {
-                    String rawDomain = row.getCell(colIdx).getStringCellValue();
-                    if(rawDomain != null) {
+                    Cell domainCell = row.getCell(colIdx);
+                    if(domainCell != null && !domainCell.equals("")) {
+                        String rawDomain = domainCell.getStringCellValue();
                         logger.info("raw domain string: {}", rawDomain);
                         String formedDomain = rawDomain.replaceAll("http://", "")
                                 .replaceAll("https://", "")
                                 .replaceAll("www.", "");
-                        logger.info("formed domain string: {}", formedDomain);
+                        logger.info("formed domain string: {}", formedDomain.replace("\u200B", "") + "...");
                         if(!domainSet.contains(formedDomain)) {
-                            domainSet.add(formedDomain);
+                            domainSet.add(formedDomain.replace("\u200B", ""));
                         }
                     } else {
                         domainMap.put(category, domainSet);

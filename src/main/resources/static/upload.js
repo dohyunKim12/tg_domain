@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault(); // 기본 폼 제출 방지
 
         var formData = new FormData(form);
+        showLoadingIcon();
         fetch('/domain-upload', {
             method: 'POST',
             body: formData
@@ -16,8 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     console.error("Error occurred while upload file");
                 }
+                hideLoadingIcon();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error)
+                hideLoadingIcon();
+            });
     };
 });
 
@@ -37,4 +42,12 @@ function truncateDomain() {
             alert(data.message);
         })
         .catch(error => console.error('Error:', error));
+}
+
+function showLoadingIcon() {
+    document.getElementById('loadingIcon').style.display = 'block';
+}
+
+function hideLoadingIcon() {
+    document.getElementById('loadingIcon').style.display = 'none';
 }
