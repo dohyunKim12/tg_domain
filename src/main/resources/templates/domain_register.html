@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>Tg Domain Register</title>
-  <script src="/customer_get.js"></script>
 <!--  <link rel="stylesheet" type="text/css" href="/modal.css">-->
 </head>
 <body>
 <h1>Domain 등록</h1>
-<form id="customer-retrieve-form" method="POST" action="domain-register">
-  <label for="customer-name">고객사:</label>
-  <input type="text" id="customer-name" name="customer-name">
+<form id="client-retrieve-form" method="POST" action="domain-register">
+  <label for="client-name">고객사:</label>
+  <input type="text" id="client-name" name="client-name">
   <button type="submit">조회</button>
 </form>
 
-<div  id="customerName" style="margin-top: 30px"></div>
-<ul id="requestList"></ul>
+<div  id="clientName" style="margin-top: 30px"></div>
+<!--<ul id="requestList"></ul>-->
+<ul id="clientUrls"></ul>
 
 <h2>Recommended Domain List</h2>
 <ul id="recommendedDomainList"></ul>
@@ -28,7 +28,7 @@
 <!--  </div>-->
 <!--</div>-->
 
-<script src="/customer_get.js"></script>
+<script src="/client_get.js"></script>
 
 </body>
 </html>

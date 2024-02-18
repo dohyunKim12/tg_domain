@@ -2,9 +2,9 @@ package com.tg.url.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.tg.url.config.TgConstants;
+import com.tg.url.dto.DomainRecommend;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,7 +61,7 @@ public class DomainController {
             logger.error(e.toString());
             return ResponseEntity.ok(Collections.singletonMap("message", "uploadFail"));
         }
-
+        logger.info("Domain upload end");
         return ResponseEntity.ok(Collections.singletonMap("message", "uploadSuccess"));
     }
 
@@ -162,27 +162,28 @@ public class DomainController {
     public String domainRegister() {
         return "domain_register";
     }
-
-    @PostMapping("/domain-register")
+    @PostMapping("/client-retrieve")
     @ResponseBody
-    public ResponseEntity<String> handleDomainRetrieve(@RequestParam("customer-name") String customerName) {
+    public ResponseEntity<String> handleClientRetrieve(@RequestParam("client-name") String clientName) {
         // 파일 저장
-        logger.info("CustomerRetrieve svc called");
+        logger.info("Client retrieve svc called");
 
         try {
-            String customerId = retrieveCustomerInfo(customerName);
-            if(customerId == null) {
-                return ResponseEntity.ok("notFound");
-            } else {
-                // return customer's registered domain info
-                JsonObject jo = retrieveRegisteredDomainInfo(customerName);
+            retrieveOrInsertClientInfo(clientName);
+            // select client_url or insert new client_url
+            JsonArray ja = retrieveClientUrl(clientName);
+            JsonObject jo = new JsonObject();
+            jo.add("clientUrls", ja);
 
-                // recommend domain
-                JsonArray domainList = getDomain(customerName);
-                jo.add("recommendedDomainList", domainList);
-                Gson gson = new Gson();
-                return ResponseEntity.ok(gson.toJson(jo));
-            }
+//            // return customer's registered domain info
+//            JsonObject jo = retrieveRegisteredDomainInfo(clientName);
+
+//            // recommend domain
+//            JsonArray domainList = getDomain(clientName);
+//            jo.add("recommendedDomainList", domainList);
+
+            Gson gson = new Gson();
+            return ResponseEntity.ok(gson.toJson(jo));
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e.toString());
@@ -190,53 +191,98 @@ public class DomainController {
         }
     }
 
-    private JsonArray getDomain(String customerName) throws SQLException {
-        JsonArray domainList = new JsonArray();
+    @PostMapping("/new-client-url")
+    @ResponseBody
+    public ResponseEntity insertNewClientUrl(@RequestParam("new-client-url") String url, @RequestParam("client-name") String clientName) throws SQLException {
         Connection conn = dbConnectionManager.getDataSource().getConnection();
-        PreparedStatement pstmt = conn.prepareStatement("select customer_id from customer where customer_name = ?");
-        pstmt.setString(1, customerName);
+        PreparedStatement pstmt = conn.prepareStatement("select * from client_url where client_url = ?;");
+        pstmt.setString(1, url);
         ResultSet rs = pstmt.executeQuery();
-        rs.next();
-
-        String customerId = rs.getString("customer_id");
-
-        pstmt = conn.prepareStatement("select * from registered_domain where customer_id = ?");
-        pstmt.setString(1, customerId);
-        rs = pstmt.executeQuery();
-        boolean virgin = false;
-        if(!rs.next()) {
-            virgin = true;
-        }
-        if (virgin) {
-            pstmt = conn.prepareStatement("SELECT d.domain_id, d.domain " +
-                    "FROM domain d " +
-                    "WHERE d.domain_id NOT IN (SELECT rd.domain_id " +
-                    "FROM registered_domain rd WHERE rd.customer_id = ?) " +
-                    "LIMIT 10");
-            pstmt.setString(1, customerId);
-            rs = pstmt.executeQuery();
-            while(rs.next()){
-                JsonObject jo = new JsonObject();
-                jo.addProperty("domain", rs.getString("domain"));
-                domainList.add(jo);
-            }
+        if(rs.isBeforeFirst()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("message", "DB 삭제 실패"));
         } else {
-            pstmt = conn.prepareStatement("SELECT d.domain_id, d.domain, COUNT(rd.domain_id) AS usage_count " +
-                    "FROM registered_domain rd " +
-                    "JOIN domain d ON rd.domain_id = d.domain_id " +
-                    "WHERE rd.customer_id = ? " +
-                    "GROUP BY d.domain_id, d.domain " +
-                    "ORDER BY usage_count ASC " +
-                    "LIMIT 10;");
-            pstmt.setString(1, customerId);
-            rs = pstmt.executeQuery();
-            while(rs.next()) {
-                JsonObject jo = new JsonObject();
-                jo.addProperty("domain", rs.getString("domain"));
-                domainList.add(jo);
-            }
+            pstmt = conn.prepareStatement("insert into client_url (client_url, client_name) values (?, ?);");
+            pstmt.setString(1, url);
+            pstmt.setString(2, clientName);
+            pstmt.execute();
         }
-        return domainList;
+        return ResponseEntity.ok(Collections.singletonMap("message", "new url insert success"));
+    }
+
+    private JsonArray retrieveClientUrl(String clientName) throws SQLException {
+        JsonArray result = new JsonArray();
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select client_url, registered from client_url where client_name = ?");
+        pstmt.setString(1, clientName);
+        ResultSet rs = pstmt.executeQuery();
+        while(rs.next()) {
+            JsonObject jo = new JsonObject();
+            jo.addProperty("clientUrl", rs.getString("client_url"));
+            jo.addProperty("registered", rs.getString("registered"));
+            result.add(jo);
+        }
+        return result;
+    }
+
+    @GetMapping("/domain-category-retrieve")
+    @ResponseBody
+    public ResponseEntity<String> retrieveCategories() throws SQLException {
+        // 파일 저장
+        logger.info("Retrieve category svc called");
+
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select * from category;");
+        ResultSet rs = pstmt.executeQuery();
+        JsonArray ja = new JsonArray();
+        while(rs.next()) {
+            ja.add(rs.getString("category_name"));
+        }
+        Gson gson = new Gson();
+        return ResponseEntity.ok(gson.toJson(ja));
+    }
+
+    @PostMapping("/domain-recommend")
+    @ResponseBody
+    public ResponseEntity<String> getReocmmendedDomainList(@RequestBody DomainRecommend request) {
+        logger.info("Domain recommend retrieve svc called");
+        String clientUrl = request.getUrl();
+        String category = request.getCategoryName();
+        try {
+            JsonArray ja = getDomain(clientUrl, category);
+            Gson gson = new Gson();
+            return ResponseEntity.ok(gson.toJson(ja));
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+            return ResponseEntity.ok("fail");
+        }
+    }
+
+    private JsonArray getDomain(String clientUrl, String category) throws SQLException {
+        JsonArray result = new JsonArray();
+        Connection conn = dbConnectionManager.getDataSource().getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select * from domain where category_name = ?;");
+        pstmt.setString(1, category);
+
+        pstmt = conn.prepareStatement("SELECT d.domain, COUNT(p.domain_id) AS cnt " +
+                "FROM domain d " +
+                "LEFT JOIN page_url p " +
+                "ON p.domain_id = d.domain_id " +
+                "WHERE p.client_url = ? and d.category_name = ? " +
+                "GROUP BY d.domain " +
+                "ORDER BY cnt ASC " +
+                "LIMIT 10;");
+        pstmt.setString(1, clientUrl);
+        pstmt.setString(2, category);
+        ResultSet rs = pstmt.executeQuery();
+        while(rs.next()) {
+            JsonObject jo = new JsonObject();
+            jo.addProperty("domain", rs.getString("domain"));
+            jo.addProperty("cnt", rs.getInt(2));
+            result.add(jo);
+        }
+        return result;
     }
 
     private JsonObject retrieveRegisteredDomainInfo(String customerName) throws Exception {
@@ -287,15 +333,15 @@ public class DomainController {
         return resposne;
     }
 
-    private String retrieveCustomerInfo(String customerName) throws Exception {
+    private void retrieveOrInsertClientInfo(String clientName) throws Exception {
         Connection conn = dbConnectionManager.getDataSource().getConnection();
-        PreparedStatement pstmt = conn.prepareStatement("select * from customer where customer_name = ?;");
-        pstmt.setString(1, customerName);
+        PreparedStatement pstmt = conn.prepareStatement("select * from client where client_name = ?;");
+        pstmt.setString(1, clientName);
         ResultSet rs = pstmt.executeQuery();
-        if(rs.next()) {
-            return rs.getString("customer_id");
-        } else {
-            return null;
+        if(!rs.next()) {
+            pstmt = conn.prepareStatement("insert into client (client_name) values (?);");
+            pstmt.setString(1, clientName);
+            pstmt.execute();
         }
     }
 }

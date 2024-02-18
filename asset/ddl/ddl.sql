@@ -10,7 +10,7 @@ CREATE TABLE client_url
     client_url_id         INT AUTO_INCREMENT PRIMARY KEY,
     client_url            VARCHAR(500) NULL UNIQUE,
     client_name           VARCHAR(255) NOT NULL,
-    registered            CHAR(1) NULL
+    registered            CHAR(1) NULL DEFAULT 0
 );
 
 CREATE TABLE category
@@ -33,7 +33,7 @@ CREATE TABLE page_url
 (
     page_url_id        INT AUTO_INCREMENT PRIMARY KEY,
     client_url         VARCHAR(500) NULL,
-    domain             VARCHAR(500) NULL,
+    domain_id          INT NULL,
     page_url           VARCHAR(500) NULL UNIQUE ,
     published_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
