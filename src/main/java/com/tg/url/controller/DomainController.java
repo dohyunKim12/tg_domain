@@ -251,7 +251,9 @@ public class DomainController {
         try {
             JsonArray ja = getDomain(clientUrl, category);
             Gson gson = new Gson();
-            return ResponseEntity.ok(gson.toJson(ja));
+            String response = gson.toJson(ja);
+            logger.info(response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e.toString());
@@ -265,21 +267,21 @@ public class DomainController {
         PreparedStatement pstmt = conn.prepareStatement("select * from domain where category_name = ?;");
         pstmt.setString(1, category);
 
-        pstmt = conn.prepareStatement("SELECT d.domain, COUNT(p.domain_id) AS cnt " +
+        pstmt = conn.prepareStatement("SELECT d.domain_id, d.domain, " +
+                "COALESCE(SUM(CASE WHEN p.client_url = ? THEN 1 ELSE 0 END), 0) AS page_url_count " +
                 "FROM domain d " +
-                "LEFT JOIN page_url p " +
-                "ON p.domain_id = d.domain_id " +
-                "WHERE p.client_url = ? and d.category_name = ? " +
-                "GROUP BY d.domain " +
-                "ORDER BY cnt ASC " +
-                "LIMIT 10;");
+                "LEFT JOIN page_url p ON d.domain_id = p.domain_id AND p.client_url = ? " +
+                "WHERE d.category_name = ? " +
+                "GROUP BY d.domain_id, d.domain " +
+                "ORDER BY page_url_count ASC, d.domain_id ASC LIMIT 10;");
         pstmt.setString(1, clientUrl);
-        pstmt.setString(2, category);
+        pstmt.setString(2, clientUrl);
+        pstmt.setString(3, category);
         ResultSet rs = pstmt.executeQuery();
         while(rs.next()) {
             JsonObject jo = new JsonObject();
-            jo.addProperty("domain", rs.getString("domain"));
-            jo.addProperty("cnt", rs.getInt(2));
+            jo.addProperty("recommendedDomain", rs.getString("domain"));
+            jo.addProperty("used", rs.getInt(3));
             result.add(jo);
         }
         return result;
