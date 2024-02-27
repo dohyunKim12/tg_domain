@@ -1,13 +1,16 @@
 package com.tg.url.controller;
 
+import com.tg.url.dto.PageRegisterRequest;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -30,27 +33,28 @@ public class PageController {
 
     @PostMapping("/page-register")
     @ResponseBody
-    public ResponseEntity insertNewPageUrl(@RequestParam("clientUrl") String clientUrl, @RequestParam("domain") String domain, @RequestParam("category") String category, @RequestParam("newPageUrl") String newPageUrl) throws SQLException {
-        logger.info("clientUrl : {}, domain : {} ", clientUrl, domain);
-        logger.info("category : {}, newPageUrl : {} ", category, newPageUrl);
+    public ResponseEntity insertNewPageUrl(@RequestBody PageRegisterRequest requst) throws SQLException {
+        logger.info("clientUrl : {}, domain : {} ", requst.getClientUrl(), requst.getDomain());
+        logger.info("category : {}, newPageUrl : {} ", requst.getCategory(), requst.getNewPageUrl());
+        if(!requst.getNewPageUrl().contains(requst.getDomain())) throw new RuntimeException("pageurl must contain domain");
 
         Connection conn = dbConnectionManager.getDataSource().getConnection();
-//        PreparedStatement pstmt = conn.prepareStatement("select * from client_url where client_url = ?;");
-//        pstmt.setString(1, url);
-//        ResultSet rs = pstmt.executeQuery();
-//        if(rs.isBeforeFirst()) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Collections.singletonMap("message", "Failed to insert new client url"));
-//        } else {
-//            pstmt = conn.prepareStatement("insert into client_url (client_url, client_name) values (?, ?);");
-//            pstmt.setString(1, url);
-//            pstmt.setString(2, clientName);
-//            pstmt.execute();
-//        }
-//        conn.commit();
-//        conn.close();
+        conn.setAutoCommit(false);
+        PreparedStatement pstmt = conn.prepareStatement("select domain_id from domain where domain = ? and category_name = ?;");
+        pstmt.setString(1, requst.getDomain());
+        pstmt.setString(2, requst.getCategory());
+        ResultSet rs = pstmt.executeQuery();
+        if(!rs.isBeforeFirst()) throw new SQLException("No DomainID with domain " + requst.getDomain() + ", category " + requst.getCategory());
+        rs.next();
+        String domainId = rs.getString("domain_id");
+
+        pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url) values (?, ?, ?);");
+        pstmt.setString(1, requst.getClientUrl());
+        pstmt.setString(2, domainId);
+        pstmt.setString(3, requst.getNewPageUrl());
+        pstmt.execute();
+        conn.commit();
+        conn.close();
         return ResponseEntity.ok(Collections.singletonMap("message", "new page url insert success"));
     }
-
-
 }

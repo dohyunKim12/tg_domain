@@ -89,8 +89,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                                         var newPageUrlCell = document.createElement('td');
                                                         var newPageUrlInput = document.createElement('input');
+                                                        newPageUrlInput.id = 'new-page-url-input'
                                                         newPageUrlInput.type = 'text';
                                                         newPageUrlInput.placeholder = 'Enter new page URL';
+                                                        newPageUrlInput.addEventListener('keyup', function(event) {
+                                                            event.preventDefault();
+                                                            if (event.key === 'Enter') {
+                                                                registerButton.click();
+                                                            }
+                                                        });
                                                         newPageUrlCell.appendChild(newPageUrlInput);
 
                                                         var registerButtonCell = document.createElement('td');
@@ -101,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                             registerButton.style.opacity = '0.8';
                                                             console.log(`Registering ${newPageUrlInput.value} for domain ${domain.recommendedDomain}`);
                                                             const postData = {
-                                                                clientUrl: clientUrl,
+                                                                clientUrl: clientUrl.clientUrl,
                                                                 domain: domain.recommendedDomain,
                                                                 category: category,
                                                                 newPageUrl: newPageUrlInput.value
