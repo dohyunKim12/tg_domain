@@ -140,6 +140,8 @@ public class DomainController {
         }
         workbook.close();
         excelFile.close();
+        conn.commit();
+        conn.close();
         return true;
     }
 
@@ -149,6 +151,8 @@ public class DomainController {
         try (Connection conn = dbConnectionManager.getDataSource().getConnection()) {
             PreparedStatement pstmt = conn.prepareStatement("TRUNCATE TABLE domain");
             pstmt.execute();
+            conn.commit();
+            conn.close();
             return ResponseEntity.ok(Collections.singletonMap("message", "Domain DB 삭제 완료"));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -200,13 +204,15 @@ public class DomainController {
         ResultSet rs = pstmt.executeQuery();
         if(rs.isBeforeFirst()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("message", "DB 삭제 실패"));
+                    .body(Collections.singletonMap("message", "Failed to insert new client url"));
         } else {
             pstmt = conn.prepareStatement("insert into client_url (client_url, client_name) values (?, ?);");
             pstmt.setString(1, url);
             pstmt.setString(2, clientName);
             pstmt.execute();
         }
+        conn.commit();
+        conn.close();
         return ResponseEntity.ok(Collections.singletonMap("message", "new url insert success"));
     }
 
@@ -222,6 +228,8 @@ public class DomainController {
             jo.addProperty("registered", rs.getString("registered"));
             result.add(jo);
         }
+        conn.commit();
+        conn.close();
         return result;
     }
 
@@ -239,6 +247,8 @@ public class DomainController {
             ja.add(rs.getString("category_name"));
         }
         Gson gson = new Gson();
+        conn.commit();
+        conn.close();
         return ResponseEntity.ok(gson.toJson(ja));
     }
 
@@ -284,6 +294,8 @@ public class DomainController {
             jo.addProperty("used", rs.getInt(3));
             result.add(jo);
         }
+        conn.commit();
+        conn.close();
         return result;
     }
 
@@ -332,6 +344,8 @@ public class DomainController {
         }
         resposne.add("requestList", requestList);
 
+        conn.commit();
+        conn.close();
         return resposne;
     }
 
@@ -345,5 +359,7 @@ public class DomainController {
             pstmt.setString(1, clientName);
             pstmt.execute();
         }
+        conn.commit();
+        conn.close();
     }
 }
