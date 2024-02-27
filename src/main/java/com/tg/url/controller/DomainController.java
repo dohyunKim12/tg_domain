@@ -79,6 +79,7 @@ public class DomainController {
 
     private boolean upsertDomainInfo() throws Exception {
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         FileInputStream excelFile = new FileInputStream(savedFilePath);
         Workbook workbook = new XSSFWorkbook(excelFile);
         Sheet sheet = workbook.getSheetAt(0);
@@ -148,7 +149,10 @@ public class DomainController {
     @DeleteMapping("/domain_truncate")
     @ResponseBody
     public ResponseEntity<?> domainTruncate() {
-        try (Connection conn = dbConnectionManager.getDataSource().getConnection()) {
+        try {
+            Connection conn = dbConnectionManager.getDataSource().getConnection();
+            conn.setAutoCommit(false);
+
             PreparedStatement pstmt = conn.prepareStatement("TRUNCATE TABLE domain");
             pstmt.execute();
             conn.commit();
@@ -199,6 +203,7 @@ public class DomainController {
     @ResponseBody
     public ResponseEntity insertNewClientUrl(@RequestParam("new-client-url") String url, @RequestParam("client-name") String clientName) throws SQLException {
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select * from client_url where client_url = ?;");
         pstmt.setString(1, url);
         ResultSet rs = pstmt.executeQuery();
@@ -219,6 +224,7 @@ public class DomainController {
     private JsonArray retrieveClientUrl(String clientName) throws SQLException {
         JsonArray result = new JsonArray();
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select client_url, registered from client_url where client_name = ?");
         pstmt.setString(1, clientName);
         ResultSet rs = pstmt.executeQuery();
@@ -240,6 +246,7 @@ public class DomainController {
         logger.info("Retrieve category svc called");
 
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select * from category;");
         ResultSet rs = pstmt.executeQuery();
         JsonArray ja = new JsonArray();
@@ -274,6 +281,7 @@ public class DomainController {
     private JsonArray getDomain(String clientUrl, String category) throws SQLException {
         JsonArray result = new JsonArray();
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select * from domain where category_name = ?;");
         pstmt.setString(1, category);
 
@@ -302,6 +310,7 @@ public class DomainController {
     private JsonObject retrieveRegisteredDomainInfo(String customerName) throws Exception {
         JsonObject resposne = new JsonObject();
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select * from customer where customer_name = ?;");
         pstmt.setString(1, customerName);
         ResultSet rs = pstmt.executeQuery();
@@ -351,6 +360,7 @@ public class DomainController {
 
     private void retrieveOrInsertClientInfo(String clientName) throws Exception {
         Connection conn = dbConnectionManager.getDataSource().getConnection();
+        conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select * from client where client_name = ?;");
         pstmt.setString(1, clientName);
         ResultSet rs = pstmt.executeQuery();
