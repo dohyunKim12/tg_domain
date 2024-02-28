@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 var data = JSON.parse(text);
                 data.clientUrls.forEach(clientUrl => {
                     var url = document.createElement('li');
-                    url.innerHTML = `<strong>Client URL</strong> ${clientUrl.clientUrl}   <strong>Registered</strong> ${clientUrl.registered}`;
+                    var registered = clientUrl.registered;
+                    url.innerHTML = `<strong>Client URL</strong> ${clientUrl.clientUrl}   <strong>Registered</strong> ${registered}`;
                     url.style.cursor = 'pointer';
                     document.getElementById('clientUrls').appendChild(url);
 
@@ -57,6 +58,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     table.id = 'recommendedDomainTable';
                                                     table.style.width = '50%';
                                                     table.setAttribute('border', '1');
+
+                                                    var caption = document.createElement('caption');
+                                                    caption.innerHTML = '<strong>' + clientUrl.clientUrl + '</strong>' + " - " + '<strong>' + category + '</strong>';
+                                                    table.appendChild(caption);
 
                                                     var thead = document.createElement('thead');
                                                     var headerRow = document.createElement('tr');
@@ -134,6 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                     console.log('Registration successful', data);
                                                                     registerButton.textContent = 'Success';
                                                                     registerButton.style.color = 'green';
+                                                                    registered = parseInt(registered, 10) + 1;
+                                                                    url.innerHTML = `<strong>Client URL</strong> ${clientUrl.clientUrl}   <strong>Registered</strong> ${registered}`;
                                                                 })
                                                                 .catch(error => {
                                                                     registerButton.textContent = 'Failed';
@@ -152,13 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                                         tbody.appendChild(row);
                                                     });
                                                     table.appendChild(tbody);
-                                                    // var parentCat = cat.parentNode;
-                                                    // if(cat.nextSibling) {
-                                                    //     parentCat.insertBefore(table, cat.nextSibling);
-                                                    // } else {
-                                                    //     parentCat.appendChild(table);
-                                                    // }
-                                                    // add domainList copy button
                                                     var parentDomainList = document.getElementById("recommendedDomainList").parentNode;
                                                     parentDomainList.appendChild(table);
                                                     copyButton = document.createElement('button');
