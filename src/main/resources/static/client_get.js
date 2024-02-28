@@ -2,7 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('client-retrieve-form');
     form.onsubmit = function(event) {
         event.preventDefault(); // 기본 폼 제출 방지
-
+        var newClientUrlRegisterForm = document.getElementById('new-client-url-form');
+        if (newClientUrlRegisterForm.style.display === "none") {
+            newClientUrlRegisterForm.style.display = "block";
+        }
         var formData = new FormData(form);
         fetch('/client-retrieve', {
             method: 'POST',
@@ -127,22 +130,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                         throw response;
                                                                     }
                                                                 })
-                                                                .catch(error => {
-                                                                    error.json().then(errMsg => {
-                                                                        console.error('Error:', errMsg);
-                                                                        alert(`Error: ${errMsg.message}`);
-                                                                    });
-                                                                })
                                                                 .then(data => {
                                                                     console.log('Registration successful', data);
                                                                     registerButton.textContent = 'Success';
                                                                     registerButton.style.color = 'green';
                                                                 })
                                                                 .catch(error => {
-                                                                    console.error('Error:', error);
                                                                     registerButton.textContent = 'Failed';
                                                                     registerButton.style.color = 'red';
-                                                                });
+                                                                    error.json().then(errMsg => {
+                                                                        console.error('Error:', errMsg);
+                                                                        alert(`Error: ${errMsg.message}`);
+                                                                    });
+                                                                })
                                                         });
                                                         registerButtonCell.appendChild(registerButton);
                                                         row.appendChild(domainCell);
@@ -152,13 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                                         tbody.appendChild(row);
                                                     });
                                                     table.appendChild(tbody);
-                                                    var parentCat = cat.parentNode;
-                                                    if(cat.nextSibling) {
-                                                        parentCat.insertBefore(table, cat.nextSibling);
-                                                    } else {
-                                                        parentCat.appendChild(table);
-                                                    }
+                                                    // var parentCat = cat.parentNode;
+                                                    // if(cat.nextSibling) {
+                                                    //     parentCat.insertBefore(table, cat.nextSibling);
+                                                    // } else {
+                                                    //     parentCat.appendChild(table);
+                                                    // }
                                                     // add domainList copy button
+                                                    var parentDomainList = document.getElementById("recommendedDomainList").parentNode;
+                                                    parentDomainList.appendChild(table);
                                                     copyButton = document.createElement('button');
                                                     copyButton.textContent = 'Copy Domains';
                                                     copyButton.id = 'copyButton';
@@ -174,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                             console.error('Error copying text: ', err);
                                                         });
                                                     });
-                                                    parentCat.insertBefore(copyButton, table.nextSibling);
+                                                    parentDomainList.insertBefore(copyButton, table.nextSibling);
                                                 });
                                         }
                                         else {
@@ -197,41 +199,31 @@ document.addEventListener('DOMContentLoaded', function() {
                             })
                     }, {once: true})
                 })
-
-                // 새 폼 생성 -> 이건 html 로 옮겨야할듯
-                var newForm = document.createElement('form');
-                newForm.id = 'new-client-url-form';
-                var input = document.createElement('input');
-                input.type = 'text';
-                input.name = 'newClientUrl';
-                input.placeholder = 'New Client URL';
-                var submitButton = document.createElement('button');
-                submitButton.type = 'submit';
-                submitButton.textContent = 'Submit';
-                newForm.appendChild(input);
-                newForm.appendChild(submitButton);
-                document.body.appendChild(newForm);
-                newForm.onsubmit = function(e) {
-                    e.preventDefault();
-                    var clientNameValue = document.getElementById("client-name").value;
-                    var newFormData = new FormData(newForm);
-                    newFormData.append('client-name', clientNameValue);
-                    newFormData.append('new-client-url', input.value);
-                    fetch('/new-client-url', {
-                        method: 'POST',
-                        body: newFormData
-                    })
-                        .then(response => {
-                            if(response.ok) {
-                                console.log('New client URL submitted successfully');
-                                window.location.reload();
-                            }
-                        })
-                        .catch(error => console.error('Error:', error));
-                };
             })
             .catch(error => console.error('Error:', error));
     };
+
+    var newClientUrlRegisterForm = document.getElementById('new-client-url-form');
+    newClientUrlRegisterForm.onsubmit = function(e) {
+        e.preventDefault();
+        var clientUrlRegisterParam = new FormData();
+        var clientNameValue = document.getElementById("client-name").value;
+        var inputVal = document.getElementById('newClientUrlInput').value;
+        clientUrlRegisterParam.append('client-name', clientNameValue);
+        clientUrlRegisterParam.append('new-client-url', inputVal);
+        fetch('/new-client-url', {
+            method: 'POST',
+            body: clientUrlRegisterParam
+        })
+            .then(response => {
+                if(response.ok) {
+                    console.log('New client URL submitted successfully');
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+    }
 });
 
 function closeModal() {

@@ -11,10 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collections;
 
 @Controller
@@ -50,11 +47,15 @@ public class PageController {
         rs.next();
         String domainId = rs.getString("domain_id");
 
-        pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url) values (?, ?, ?)");
-        pstmt.setString(1, clientUrl);
-        pstmt.setString(2, domainId);
-        pstmt.setString(3, newPageUrl);
-        pstmt.execute();
+        try {
+            pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url) values (?, ?, ?)");
+            pstmt.setString(1, clientUrl);
+            pstmt.setString(2, domainId);
+            pstmt.setString(3, newPageUrl);
+            pstmt.execute();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new RuntimeException("Duplicate entry " + newPageUrl + " for key page_url. PageUrl must be unique");
+        }
 
         pstmt = conn.prepareStatement("update client_url set registered = registered + 1 where client_url = ?");
         pstmt.setString(1, clientUrl);

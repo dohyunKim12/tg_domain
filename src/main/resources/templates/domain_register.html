@@ -7,15 +7,18 @@
 </head>
 <body>
 <h1>Domain 등록</h1>
-<form id="client-retrieve-form" method="POST" action="domain-register">
+<form id="client-retrieve-form">
   <label for="client-name">고객사:</label>
   <input type="text" id="client-name" name="client-name">
   <button type="submit">조회</button>
 </form>
 
-<div  id="clientName" style="margin-top: 30px"></div>
-<!--<ul id="requestList"></ul>-->
 <ul id="clientUrls"></ul>
+
+<form id="new-client-url-form" style="display: none; margin-bottom: 10px">
+  <input type="text" id="newClientUrlInput" name="newClientUrl" placeholder="New Client URL">
+  <button type="submit">Submit</button>
+</form>
 
 <h2>Recommended Domain List</h2>
 <ul id="recommendedDomainList"></ul>
