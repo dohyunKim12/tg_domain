@@ -4,14 +4,11 @@ import com.tg.url.dto.PageRegisterRequest;
 import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.sql.Connection;
@@ -34,25 +31,35 @@ public class PageController {
     @PostMapping("/page-register")
     @ResponseBody
     public ResponseEntity insertNewPageUrl(@RequestBody PageRegisterRequest requst) throws SQLException {
-        logger.info("clientUrl : {}, domain : {} ", requst.getClientUrl(), requst.getDomain());
-        logger.info("category : {}, newPageUrl : {} ", requst.getCategory(), requst.getNewPageUrl());
-        if(!requst.getNewPageUrl().contains(requst.getDomain())) throw new RuntimeException("pageurl must contain domain");
+        String clientUrl = requst.getClientUrl();
+        String domain = requst.getDomain();
+        String category = requst.getCategory();
+        String newPageUrl = requst.getNewPageUrl();
+
+        logger.info("clientUrl : {}, domain : {} ", clientUrl, domain);
+        logger.info("category : {}, newPageUrl : {} ", category, newPageUrl);
+        if(!newPageUrl.contains(domain)) throw new RuntimeException("pageurl must contain domain");
 
         Connection conn = dbConnectionManager.getDataSource().getConnection();
         conn.setAutoCommit(false);
-        PreparedStatement pstmt = conn.prepareStatement("select domain_id from domain where domain = ? and category_name = ?;");
-        pstmt.setString(1, requst.getDomain());
-        pstmt.setString(2, requst.getCategory());
+        PreparedStatement pstmt = conn.prepareStatement("select domain_id from domain where domain = ? and category_name = ?");
+        pstmt.setString(1, domain);
+        pstmt.setString(2, category);
         ResultSet rs = pstmt.executeQuery();
-        if(!rs.isBeforeFirst()) throw new SQLException("No DomainID with domain " + requst.getDomain() + ", category " + requst.getCategory());
+        if(!rs.isBeforeFirst()) throw new SQLException("No DomainID with domain " + domain + ", category " + category);
         rs.next();
         String domainId = rs.getString("domain_id");
 
-        pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url) values (?, ?, ?);");
-        pstmt.setString(1, requst.getClientUrl());
+        pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url) values (?, ?, ?)");
+        pstmt.setString(1, clientUrl);
         pstmt.setString(2, domainId);
-        pstmt.setString(3, requst.getNewPageUrl());
+        pstmt.setString(3, newPageUrl);
         pstmt.execute();
+
+        pstmt = conn.prepareStatement("update client_url set registered = registered + 1 where client_url = ?");
+        pstmt.setString(1, clientUrl);
+        pstmt.execute();
+
         conn.commit();
         conn.close();
         return ResponseEntity.ok(Collections.singletonMap("message", "new page url insert success"));
