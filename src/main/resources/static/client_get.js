@@ -124,8 +124,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                     if(response.ok) {
                                                                         return response.json();
                                                                     } else {
-                                                                        throw new Error('Something went wrong');
+                                                                        throw response;
                                                                     }
+                                                                })
+                                                                .catch(error => {
+                                                                    error.json().then(errMsg => {
+                                                                        console.error('Error:', errMsg);
+                                                                        alert(`Error: ${errMsg.message}`);
+                                                                    });
                                                                 })
                                                                 .then(data => {
                                                                     console.log('Registration successful', data);
