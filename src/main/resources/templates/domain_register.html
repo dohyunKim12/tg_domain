@@ -29,8 +29,6 @@
   <tr>
     <th>Domain</th>
     <th>Used</th>
-    <th id="dropZone">drop file here</th>
-    <th>Successfully Registered PageUrls</th>
   </tr>
   </thead>
   <tbody>
@@ -38,8 +36,16 @@
   </tbody>
 </table>
 
-<button id="copyDomainBtn" style="margin-top: 10px; margin-bottom: 10px; display: block;">
+<button id="copyDomainBtn" style="margin-top: 10px; margin-right: 10px; display: inline-block;">
   Copy Domains
+</button>
+
+<input type="file" id="urlFileInput" style="display: none;" />
+<button id="urlUploadBtn" style="display: inline-block;">Upload Url FILE</button>
+
+<textarea id="newUrls" placeholder="New Urls" style="display: block; width: 100px; height: 150px; margin-top: 10px;"></textarea>
+<button id="urlTextUploadBtn" style="margin-top: 3px;">
+  Upload Url TEXT
 </button>
 
 <script src="/client_get.js"></script>
