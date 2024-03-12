@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Tg Domain Register</title>
-<!--  <link rel="stylesheet" type="text/css" href="/modal.css">-->
+  <link rel="stylesheet" type="text/css" href="/table.css">
 </head>
 <body>
 <h1>Domain 등록</h1>
@@ -22,6 +22,25 @@
 
 <h2>Recommended Domain List</h2>
 <ul id="recommendedDomainList"></ul>
+
+<table id="recommendedDomainTable" style="width: 50%; border-collapse: collapse;">
+  <caption><strong id="clientUrlCaption"></strong><strong id="categoryCaption"></strong></caption>
+  <thead>
+  <tr>
+    <th>Domain</th>
+    <th>Used</th>
+    <th id="dropZone">drop file here</th>
+    <th>Successfully Registered PageUrls</th>
+  </tr>
+  </thead>
+  <tbody>
+  <!-- 동적으로 행(row)을 추가할 예정 -->
+  </tbody>
+</table>
+
+<button id="copyDomainBtn" style="margin-top: 10px; margin-bottom: 10px; display: block;">
+  Copy Domains
+</button>
 
 <script src="/client_get.js"></script>
 

@@ -1,0 +1,7 @@
+#recommendedDomainTable, #recommendedDomainTable th, #recommendedDomainTable td {
+    border: 1px solid black; /* 각 셀에 경계선 추가 */
+}
+
+#recommendedDomainTable {
+    border-collapse: collapse; /* 경계선 겹침 방지 */
+}
