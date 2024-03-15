@@ -7,7 +7,7 @@ plugins {
 
 group 'com.tg'
 version '1.0-SNAPSHOT'
-def archiveName = project.findProperty("jarName") ?: "doamin-app"
+def archiveName = project.findProperty("jarName") ?: "domain-app"
 def ver = project.findProperty("version") ?: ""
 archivesBaseName = "${archiveName}"
 
