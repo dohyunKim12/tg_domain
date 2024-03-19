@@ -20,8 +20,17 @@
   <button type="submit">Submit</button>
 </form>
 
-<h2>Recommended Domain List</h2>
-<ul id="recommendedDomainList"></ul>
+<button id="copyDomainBtn" style="margin-top: 10px; margin-right: 10px; display: inline-block;">
+  Copy Domains
+</button>
+
+<input type="file" id="urlFileInput" style="display: none;" />
+<button id="urlUploadBtn" style="display: inline-block;">Upload Url FILE</button>
+
+<textarea id="newUrls" placeholder="New Urls" style="display: block; width: 100px; height: 150px; margin-top: 10px;"></textarea>
+<button id="urlTextUploadBtn" style="margin-top: 3px;">
+  Upload Url TEXT
+</button>
 
 <table id="recommendedDomainTable" style="width: 50%; border-collapse: collapse;">
   <caption><strong id="clientUrlCaption"></strong><strong id="categoryCaption"></strong></caption>
@@ -35,18 +44,6 @@
   <!-- 동적으로 행(row)을 추가할 예정 -->
   </tbody>
 </table>
-
-<button id="copyDomainBtn" style="margin-top: 10px; margin-right: 10px; display: inline-block;">
-  Copy Domains
-</button>
-
-<input type="file" id="urlFileInput" style="display: none;" />
-<button id="urlUploadBtn" style="display: inline-block;">Upload Url FILE</button>
-
-<textarea id="newUrls" placeholder="New Urls" style="display: block; width: 100px; height: 150px; margin-top: 10px;"></textarea>
-<button id="urlTextUploadBtn" style="margin-top: 3px;">
-  Upload Url TEXT
-</button>
 
 <script src="/client_get.js"></script>
 

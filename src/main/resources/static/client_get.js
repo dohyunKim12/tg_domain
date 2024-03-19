@@ -15,25 +15,31 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(text => {
                 console.log(text);
                 var data = JSON.parse(text);
+                var clientUrlList = document.getElementById('clientUrls');
+                while (clientUrlList.firstChild) {
+                    clientUrlList.removeChild(clientUrlList.firstChild);
+                }
                 data.clientUrls.forEach(clientUrl => {
                     var url = document.createElement('li');
                     var registered = clientUrl.registered;
                     url.innerHTML = `<strong>Client URL</strong> ${clientUrl.clientUrl}   <strong>Registered</strong> ${registered}`;
                     url.style.cursor = 'pointer';
-                    document.getElementById('clientUrls').appendChild(url);
+                    clientUrlList.appendChild(url);
 
                     url.addEventListener('click', function () {
                         url.style.cursor = 'auto';
                         var categoryListContainer = document.createElement('ul');
                         categoryListContainer.style.listStyleType = 'none';
-                        fetch('/domain-category-retrieve', {
+                        var selectedClientUrl = clientUrl.clientUrl;
+                        const retrieveUrl = `/domain-category-retrieve?clientUrl=${encodeURIComponent(selectedClientUrl)}`;
+                        fetch(retrieveUrl, {
                             method: 'GET'
                         })
                             .then(response => response.json())
-                            .then(categories => {
-                                categories.forEach(category => {
+                            .then(data => {
+                                for (const [category, cntPerCategory] of Object.entries(data.categories)) {
                                     var cat = document.createElement('li');
-                                    cat.textContent = category;
+                                    cat.innerHTML = `${category}  (${cntPerCategory})`;
                                     cat.style.cursor = 'pointer';
                                     categoryListContainer.appendChild(cat);
                                     // domain_category 항목에 대한 클릭 이벤트
@@ -111,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             table = false;
                                         }
                                     });
-                                })
+                                }
                                 var parent = url.parentNode;
                                 if(url.nextSibling) {
                                     parent.insertBefore(categoryListContainer, url.nextSibling);

@@ -241,7 +241,7 @@ public class DomainController {
 
     @GetMapping("/domain-category-retrieve")
     @ResponseBody
-    public ResponseEntity<String> retrieveCategories() throws SQLException {
+    public ResponseEntity<String> retrieveCategories(@RequestParam String clientUrl) throws SQLException {
         // 파일 저장
         logger.info("Retrieve category svc called");
 
@@ -249,14 +249,25 @@ public class DomainController {
         conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement("select * from category;");
         ResultSet rs = pstmt.executeQuery();
-        JsonArray ja = new JsonArray();
+        JsonObject response = new JsonObject();
+        JsonObject jo = new JsonObject();
         while(rs.next()) {
-            ja.add(rs.getString("category_name"));
+            String categoryName = rs.getString("category_name");
+            pstmt = conn.prepareStatement("select count(*) from page_url left join domain on page_url.domain_id = domain.domain_id where client_url = ? and category_name = ?");
+            pstmt.setString(1, clientUrl);
+            pstmt.setString(2, categoryName);
+            ResultSet rs2 = pstmt.executeQuery();
+            int cntPerCategory = 0;
+            if(rs2.next()) {
+                cntPerCategory = rs2.getInt(1);
+            }
+            jo.addProperty(categoryName, cntPerCategory);
         }
+        response.add("categories", jo);
         Gson gson = new Gson();
         conn.commit();
         conn.close();
-        return ResponseEntity.ok(gson.toJson(ja));
+        return ResponseEntity.ok(gson.toJson(response));
     }
 
     @PostMapping("/domain-recommend")

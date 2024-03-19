@@ -5,6 +5,7 @@ import com.tg.url.service.DbConnectionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,7 +65,11 @@ public class PageController {
             pstmt.setString(1, domain);
             pstmt.setString(2, category);
             ResultSet rs = pstmt.executeQuery();
-            if(!rs.isBeforeFirst()) throw new SQLException("No DomainID with domain " + domain + ", category " + category);
+            if(!rs.isBeforeFirst()) {
+                conn.rollback();
+                conn.close();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error: No Domain with domain: " + domain + " category: " + category);
+            }
             rs.next();
             String domainId = rs.getString("domain_id");
 
@@ -76,7 +81,10 @@ public class PageController {
                 pstmt.execute();
             } catch (SQLIntegrityConstraintViolationException e) {
                 e.printStackTrace();
-                throw new RuntimeException("Duplicate entry " + newPageUrl + " for key page_url. PageUrl must be unique");
+                logger.error("Duplicate entry " + newPageUrl + " for key page_url. PageUrl must be unique");
+                conn.rollback();
+                conn.close();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error: " + e.getMessage());
             }
         }
 
