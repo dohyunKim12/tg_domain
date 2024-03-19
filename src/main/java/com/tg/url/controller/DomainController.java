@@ -276,8 +276,9 @@ public class DomainController {
         logger.info("Domain recommend retrieve svc called");
         String clientUrl = request.getUrl();
         String category = request.getCategoryName();
+        int requestCnt = request.getRequestCnt();
         try {
-            JsonArray ja = getDomain(clientUrl, category);
+            JsonArray ja = getDomain(clientUrl, category, requestCnt);
             Gson gson = new Gson();
             String response = gson.toJson(ja);
             logger.info(response);
@@ -289,7 +290,7 @@ public class DomainController {
         }
     }
 
-    private JsonArray getDomain(String clientUrl, String category) throws SQLException {
+    private JsonArray getDomain(String clientUrl, String category, int requestCnt) throws SQLException {
         JsonArray result = new JsonArray();
         Connection conn = dbConnectionManager.getDataSource().getConnection();
         conn.setAutoCommit(false);
@@ -302,10 +303,11 @@ public class DomainController {
                 "LEFT JOIN page_url p ON d.domain_id = p.domain_id AND p.client_url = ? " +
                 "WHERE d.category_name = ? " +
                 "GROUP BY d.domain_id, d.domain " +
-                "ORDER BY page_url_count ASC, d.domain_id ASC LIMIT 10;");
+                "ORDER BY page_url_count ASC, d.domain_id ASC LIMIT ?;");
         pstmt.setString(1, clientUrl);
         pstmt.setString(2, clientUrl);
         pstmt.setString(3, category);
+        pstmt.setInt(4, requestCnt);
         ResultSet rs = pstmt.executeQuery();
         while(rs.next()) {
             JsonObject jo = new JsonObject();

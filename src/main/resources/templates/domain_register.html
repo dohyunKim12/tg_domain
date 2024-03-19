@@ -13,12 +13,23 @@
   <button type="submit">조회</button>
 </form>
 
-<ul id="clientUrls"></ul>
-
 <form id="new-client-url-form" style="display: none; margin-bottom: 10px">
   <input type="text" id="newClientUrlInput" name="newClientUrl" placeholder="New Client URL">
   <button type="submit">Submit</button>
 </form>
+
+<textarea id="requestCnt">요청 도메인 수 (기본 10개)</textarea>
+<style>
+  #requestCnt {
+    margin-top: 5px;
+    height: 16px;
+    width: 200px;
+    resize: none;
+  }
+</style>
+<ul id="clientUrls"></ul>
+
+
 
 <button id="copyDomainBtn" style="margin-top: 10px; margin-right: 10px; display: inline-block;">
   Copy Domains

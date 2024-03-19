@@ -10,4 +10,8 @@ public class DomainRecommend {
     @Getter
     @Setter
     private String categoryName;
+
+    @Getter
+    @Setter
+    private int requestCnt;
 }

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             .then(data => {
                                 for (const [category, cntPerCategory] of Object.entries(data.categories)) {
                                     var cat = document.createElement('li');
-                                    cat.innerHTML = `${category}  (${cntPerCategory})`;
+                                    cat.innerHTML = `${category}  (${cntPerCategory}) `;
                                     cat.style.cursor = 'pointer';
                                     categoryListContainer.appendChild(cat);
                                     // domain_category 항목에 대한 클릭 이벤트
@@ -53,12 +53,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                             tableCaption.innerHTML = '<strong>' + clientUrl.clientUrl + '</strong>' + " - " + '<strong>' + category + '</strong>';
                                             const tbody = document.querySelector('#recommendedDomainTable tbody');
                                             tbody.innerHTML = '';
+                                            var requestCnt = document.getElementById('requestCnt').value;
+                                            requestCnt = parseInt(requestCnt.trim());
+                                            if (isNaN(requestCnt) || requestCnt === '' || requestCnt <= 0) {
+                                                requestCnt = 10;
+                                            }
                                             fetch('/domain-recommend', {
                                                 method: 'POST',
                                                 headers: {
                                                     'Content-Type': 'application/json',
                                                 },
-                                                body: JSON.stringify({ url: clientUrl.clientUrl, categoryName: category })
+                                                body: JSON.stringify({ url: clientUrl.clientUrl, categoryName: category, requestCnt: requestCnt })
                                             })
                                                 .then(response => response.json())
                                                 .then(domainList => {
