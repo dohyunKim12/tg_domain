@@ -40,3 +40,5 @@ CREATE TABLE page_url
     published_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+
+drop table page_url;
