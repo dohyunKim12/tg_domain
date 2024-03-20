@@ -39,6 +39,3 @@ CREATE TABLE page_url
     domain             VARCHAR(500) NOT NULL,
     published_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-
-drop table page_url;
