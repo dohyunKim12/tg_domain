@@ -81,6 +81,9 @@ public class PageController {
                 pstmt.setString(4, category);
                 pstmt.setString(5, domain);
                 pstmt.execute();
+                pstmt = conn.prepareStatement("update client_url set registered = registered + 1 where client_url = ?");
+                pstmt.setString(1, clientUrl);
+                pstmt.execute();
             } catch (SQLIntegrityConstraintViolationException e) {
                 e.printStackTrace();
                 logger.error("Duplicate entry " + newPageUrl + " for key page_url. PageUrl must be unique");
@@ -89,11 +92,6 @@ public class PageController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error: " + e.getMessage());
             }
         }
-
-        pstmt = conn.prepareStatement("update client_url set registered = registered + 1 where client_url = ?");
-        pstmt.setString(1, clientUrl);
-        pstmt.execute();
-
         conn.commit();
         conn.close();
         return ResponseEntity.ok().body(pageUrlList);

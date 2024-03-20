@@ -83,11 +83,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     copyButton = document.getElementById('copyDomainBtn');
                                                     copyButton.addEventListener('click', () => {
                                                         const domainsToCopy = domainList.map(domain => domain.recommendedDomain).join('\n');
-                                                        navigator.clipboard.writeText(domainsToCopy).then(() => {
-                                                            console.log('Domains copied to clipboard!');
-                                                        }).catch(err => {
+                                                        // Create a new textarea element to hold the text
+                                                        const textarea = document.createElement('textarea');
+                                                        textarea.value = domainsToCopy;
+                                                        // Append the textarea to the document body
+                                                        document.body.appendChild(textarea);
+                                                        // Select the text within the textarea
+                                                        textarea.select();
+                                                        try {
+                                                            // Execute the copy command
+                                                            const successful = document.execCommand('copy');
+                                                            if (successful) {
+                                                                console.log('Domains copied to clipboard!');
+                                                            } else {
+                                                                console.error('Failed to copy text to clipboard');
+                                                            }
+                                                        } catch (err) {
                                                             console.error('Error copying text: ', err);
-                                                        });
+                                                        } finally {
+                                                            // Remove the textarea from the document body
+                                                            document.body.removeChild(textarea);
+                                                        }
                                                     });
 
                                                     document.getElementById('urlUploadBtn').addEventListener('click', function() {
