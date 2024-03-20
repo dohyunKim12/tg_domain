@@ -82,28 +82,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                                     copyButton = document.getElementById('copyDomainBtn');
                                                     copyButton.addEventListener('click', () => {
-                                                        const domainsToCopy = domainList.map(domain => domain.recommendedDomain).join('\n');
-                                                        // Create a new textarea element to hold the text
-                                                        const textarea = document.createElement('textarea');
-                                                        textarea.value = domainsToCopy;
-                                                        // Append the textarea to the document body
-                                                        document.body.appendChild(textarea);
-                                                        // Select the text within the textarea
-                                                        textarea.select();
-                                                        try {
-                                                            // Execute the copy command
-                                                            const successful = document.execCommand('copy');
-                                                            if (successful) {
-                                                                console.log('Domains copied to clipboard!');
-                                                            } else {
-                                                                console.error('Failed to copy text to clipboard');
-                                                            }
-                                                        } catch (err) {
-                                                            console.error('Error copying text: ', err);
-                                                        } finally {
-                                                            // Remove the textarea from the document body
-                                                            document.body.removeChild(textarea);
-                                                        }
+                                                        // 도메인 텍스트를 가져와 표시할 div 요소 선택
+                                                        const domainTextElement = document.getElementById('domainText');
+                                                        let domainsToCopy = '';
+                                                        domainList.forEach(domain => {
+                                                            domainsToCopy += domain.recommendedDomain + '\n';
+                                                        });
+                                                        // 텍스트를 div 요소에 표시
+                                                        domainTextElement.value = domainsToCopy;
+                                                        domainTextElement.style.display = 'block';
+                                                        // 사용자에게 텍스트 영역을 선택하고 복사할 것을 안내
+                                                        domainTextElement.focus();
+                                                        domainTextElement.select();
+                                                        document.execCommand('copy');
+                                                        // 사용자에게 알림
+                                                        alert('Domains copied to clipboard!');
                                                     });
 
                                                     document.getElementById('urlUploadBtn').addEventListener('click', function() {
