@@ -35,6 +35,8 @@ CREATE TABLE page_url
     client_url         VARCHAR(500) NULL,
     domain_id          INT NULL,
     page_url           VARCHAR(500) NULL UNIQUE ,
-    published_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    category_name      VARCHAR(255) NULL,
+    domain             VARCHAR(500) NOT NULL,
+    published_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

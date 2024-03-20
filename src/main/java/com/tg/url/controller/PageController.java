@@ -74,10 +74,12 @@ public class PageController {
             String domainId = rs.getString("domain_id");
 
             try {
-                pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url) values (?, ?, ?)");
+                pstmt = conn.prepareStatement("insert into page_url (client_url, domain_id, page_url, category_name, domain) values (?, ?, ?, ?, ?)");
                 pstmt.setString(1, clientUrl);
                 pstmt.setString(2, domainId);
                 pstmt.setString(3, newPageUrl);
+                pstmt.setString(4, category);
+                pstmt.setString(5, domain);
                 pstmt.execute();
             } catch (SQLIntegrityConstraintViolationException e) {
                 e.printStackTrace();
