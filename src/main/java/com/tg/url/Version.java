@@ -12,6 +12,7 @@ public class Version {
 
     public static void main(String[] args) {
         logger.info("Domain-app started");
+        System.out.println(System.getProperty("user.dir"));
 
         ApplicationContext appContext = SpringApplication.run(Version.class, args);
     }

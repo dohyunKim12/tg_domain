@@ -3,7 +3,8 @@ package com.tg.url.config;
 import java.io.File;
 
 public class TgConstants {
-    public static final String USER_DIR =  "/root/domainapp";
+    public static final String ROOT_DIR =  System.getProperty("user.dir");
+    public static final String USER_DIR = ROOT_DIR + "root";
 
     public static final String DEFAULT_UPLOAD_PATH = USER_DIR + "/binary/uploads";
     public static final String DOMAIN_UPLOAD_PATH = DEFAULT_UPLOAD_PATH + "/domains";
