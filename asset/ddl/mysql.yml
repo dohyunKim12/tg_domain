@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: url-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: URLADMIN
+      MYSQL_CHARSET: utf8
+      MYSQL_COLLATION: utf8_general_ci
+    network_mode: host
+    volumes:
+      - /root/mysql/db:/var/lib/mysql
+    command: --max_connections=151 --innodb_buffer_pool_size=256M
+    restart: unless-stopped
